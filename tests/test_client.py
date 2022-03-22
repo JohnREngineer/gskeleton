@@ -1,6 +1,6 @@
-from gskeleton.client import Client, DriveLocation
+from gskeleton.driveetl import DriveETL, DriveLocation
 
 
-def test_client_init():
-    skel = Client("asdf1234")
+def test_driveetl_init():
+    skel = DriveETL("asdf1234")
     assert skel.settings_location == DriveLocation(key="asdf1234")
