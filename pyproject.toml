@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gsqletl"
+name = "gskeleton"
 version = "0.1.0"
 description = ""
 authors = ["John R <JohnREngineer@gmail.com>"]
