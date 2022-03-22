@@ -1,5 +1,5 @@
 from gsqletl import __version__
-from gsqletl.math import User, multiply_two_numbers
+from gsqletl.toy import User, multiply_two_numbers
 
 
 def test_version():
