@@ -243,6 +243,21 @@ httplib2 = ">=0.15.0"
 six = "*"
 
 [[package]]
+name = "google-auth-oauthlib"
+version = "0.5.1"
+description = "Google Authentication Library"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+google-auth = ">=1.0.0"
+requests-oauthlib = ">=0.7.0"
+
+[package.extras]
+tool = ["click (>=6.0.0)"]
+
+[[package]]
 name = "googleapis-common-protos"
 version = "1.56.0"
 description = "Common protobufs used in Google APIs"
@@ -255,6 +270,18 @@ protobuf = ">=3.12.0"
 
 [package.extras]
 grpc = ["grpcio (>=1.0.0)"]
+
+[[package]]
+name = "gspread"
+version = "5.2.0"
+description = "Google Spreadsheets Python API"
+category = "main"
+optional = false
+python-versions = ">=3.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[package.dependencies]
+google-auth = ">=1.12.0"
+google-auth-oauthlib = ">=0.4.1"
 
 [[package]]
 name = "httplib2"
@@ -381,6 +408,19 @@ pyasn1 = ">=0.1.7"
 pyasn1-modules = ">=0.0.5"
 rsa = ">=3.1.4"
 six = ">=1.6.1"
+
+[[package]]
+name = "oauthlib"
+version = "3.2.0"
+description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+rsa = ["cryptography (>=3.0.0)"]
+signals = ["blinker (>=1.4.0)"]
+signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "packaging"
@@ -628,6 +668,21 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 use_chardet_on_py3 = ["chardet (>=3.0.2,<5)"]
 
 [[package]]
+name = "requests-oauthlib"
+version = "1.3.1"
+description = "OAuthlib authentication support for Requests."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[package.dependencies]
+oauthlib = ">=3.0.0"
+requests = ">=2.0.0"
+
+[package.extras]
+rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
+
+[[package]]
 name = "rsa"
 version = "4.8"
 description = "Pure-Python RSA implementation"
@@ -741,7 +796,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "775ef179602f8f74e3ddcfcb266f7dd63e66a7b40e1b8581d0e87f5097f4f4e7"
+content-hash = "f951752acb464638d4fe897711fa8bf251ceffdd705f96f69fb70006178433fb"
 
 [metadata.files]
 atomicwrites = [
@@ -946,9 +1001,17 @@ google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
     {file = "google_auth_httplib2-0.1.0-py2.py3-none-any.whl", hash = "sha256:31e49c36c6b5643b57e82617cb3e021e3e1d2df9da63af67252c02fa9c1f4a10"},
 ]
+google-auth-oauthlib = [
+    {file = "google-auth-oauthlib-0.5.1.tar.gz", hash = "sha256:30596b824fc6808fdaca2f048e4998cc40fb4b3599eaea66d28dc7085b36c5b8"},
+    {file = "google_auth_oauthlib-0.5.1-py2.py3-none-any.whl", hash = "sha256:24f67735513c4c7134dbde2f1dee5a1deb6acc8dfcb577d7bff30d213a28e7b0"},
+]
 googleapis-common-protos = [
     {file = "googleapis-common-protos-1.56.0.tar.gz", hash = "sha256:4007500795bcfc269d279f0f7d253ae18d6dc1ff5d5a73613ffe452038b1ec5f"},
     {file = "googleapis_common_protos-1.56.0-py2.py3-none-any.whl", hash = "sha256:60220c89b8bd5272159bed4929ecdc1243ae1f73437883a499a44a1cbc084086"},
+]
+gspread = [
+    {file = "gspread-5.2.0-py3-none-any.whl", hash = "sha256:05297b49587b5e89c2a0aa39967f43e5b7f170b62c11ddd43214baa1085131a8"},
+    {file = "gspread-5.2.0.tar.gz", hash = "sha256:25173ac081469cf9d621514c6576c6cf46f39c825f178b8cb9e78374a637b0bf"},
 ]
 httplib2 = [
     {file = "httplib2-0.20.4-py3-none-any.whl", hash = "sha256:8b6a905cb1c79eefd03f8669fd993c36dc341f7c558f056cb5a33b5c2f458543"},
@@ -1014,6 +1077,10 @@ nodeenv = [
 oauth2client = [
     {file = "oauth2client-4.1.3-py2.py3-none-any.whl", hash = "sha256:b8a81cc5d60e2d364f0b1b98f958dbd472887acaf1a5b05e21c28c31a2d6d3ac"},
     {file = "oauth2client-4.1.3.tar.gz", hash = "sha256:d486741e451287f69568a4d26d70d9acd73a2bbfa275746c535b4209891cccc6"},
+]
+oauthlib = [
+    {file = "oauthlib-3.2.0-py3-none-any.whl", hash = "sha256:6db33440354787f9b7f3a6dbd4febf5d0f93758354060e802f6c06cb493022fe"},
+    {file = "oauthlib-3.2.0.tar.gz", hash = "sha256:23a8208d75b902797ea29fd31fa80a15ed9dc2c6c16fe73f5d346f83f6fa27a2"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
@@ -1204,6 +1271,10 @@ pyyaml = [
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
     {file = "requests-2.27.1.tar.gz", hash = "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"},
+]
+requests-oauthlib = [
+    {file = "requests-oauthlib-1.3.1.tar.gz", hash = "sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a"},
+    {file = "requests_oauthlib-1.3.1-py2.py3-none-any.whl", hash = "sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5"},
 ]
 rsa = [
     {file = "rsa-4.8-py3-none-any.whl", hash = "sha256:95c5d300c4e879ee69708c428ba566c59478fd653cc3a22243eeb8ed846950bb"},
