@@ -11,10 +11,12 @@ class DriveLocation(BaseModel):
 
 
 class DriveETL:
-    def __init__(self, settings_key: str, credentials: Any):
-        self.settings_location = DriveLocation(key=settings_key)
+    def __init__(self, credentials: Any):
         self.credentials = credentials
         self.gc = gspread.authorize(self.credentials)
         gauth = GoogleAuth()
         gauth.credentials = self.credentials
         self.drive = GoogleDrive(gauth)
+
+    def run_config(self, key: str):
+        self.config_location = DriveLocation(key=key)
