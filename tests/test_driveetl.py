@@ -1,5 +1,4 @@
 import gskeleton
-from gskeleton.driveetl import DriveLocation
 
 
 def test_gskeleton(mocker):
@@ -12,4 +11,4 @@ def test_gskeleton(mocker):
     assert gs.drive.auth.credentials == "test_credentials"
 
     gs.run_etl("test_config_key")
-    assert gs.config_location == DriveLocation(key="test_config_key")
+    assert gs.config_key == "test_config_key"
