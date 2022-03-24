@@ -10,5 +10,5 @@ def test_gskeleton(mocker):
     assert gs.gc == "test_gspread_credentials"
     assert gs.drive.auth.credentials == "test_credentials"
 
-    gs.run_etl("test_config_key")
-    assert gs.config_key == "test_config_key"
+    gs.run_etl("test_config_folder_key")
+    assert gs.config_folder_key == "test_config_folder_key"
