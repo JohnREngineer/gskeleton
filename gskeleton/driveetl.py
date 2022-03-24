@@ -18,5 +18,5 @@ class DriveETL:
         gauth.credentials = self.credentials
         self.drive = GoogleDrive(gauth)
 
-    def run_etl(self, settings_key: str):
-        self.settings_location = DriveLocation(key=settings_key)
+    def run_etl(self, config_key: str):
+        self.config_location = DriveLocation(key=config_key)
