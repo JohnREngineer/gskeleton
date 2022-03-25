@@ -15,5 +15,6 @@ from .driveetl import DriveETL
 
 
 def authorize(credentials: Any) -> DriveETL:
-    etl = DriveETL(credentials)
+    etl = DriveETL()
+    etl.authorize(credentials)
     return etl

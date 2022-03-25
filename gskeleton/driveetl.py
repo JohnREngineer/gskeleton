@@ -6,9 +6,14 @@ from pydrive2.drive import GoogleDrive
 
 
 class DriveETL:
-    def __init__(self, credentials: Any):
+    def __init__(self):
+        self.credentials = None
+        self.gspread_client = None
+        self.drive = None
+
+    def authorize(self, credentials: Any):
         self.credentials = credentials
-        self.gc = gspread.authorize(self.credentials)
+        self.gspread_client = gspread.authorize(self.credentials)
         gauth = GoogleAuth()
         gauth.credentials = self.credentials
         self.drive = GoogleDrive(gauth)
@@ -21,9 +26,10 @@ class DriveETL:
             "json": "application/json",
             "spreadsheet": "application/vnd.google-apps.spreadsheet",
         }
-        files = self.drive.ListFile(
+        list_file = self.drive.ListFile(
             {"q": "'{}' in parents and trashed=false".format(key)}
-        ).GetList()
+        )
+        files = list_file.GetList()
         type_select = mime_types[file_type] if file_type else ""
         output_files = [
             (f.get("modifiedDate"), f.get("id"))
@@ -43,6 +49,9 @@ class DriveETL:
 
     def run_etl(self, config_folder_key: str):
         # Download config settings
-        config_keys = self._get_keys_from_folder(config_folder_key)
-        config_path = self._download_drive_file(config_keys[0])
+        config_keys = self._get_keys_from_folder(
+            config_folder_key, file_type="yaml"
+        )
+        self.config_key = config_keys[0]
+        config_path = self._download_drive_file(self.config_key)
         return config_path
