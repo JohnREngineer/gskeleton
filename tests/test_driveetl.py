@@ -60,4 +60,4 @@ def test_get_keys_from_folder(mocker):
     assert path == "mocked title"
 
     etl.run_etl("test_config_folder_key")
-    assert etl.config_key == "test_key2"
+    assert etl._config_key == "test_key2"
