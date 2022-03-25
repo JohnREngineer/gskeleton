@@ -1,6 +1,7 @@
 from typing import Any, List
 
 import gspread
+import yaml
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
@@ -10,13 +11,6 @@ class DriveETL:
         self.credentials = None
         self.gspread_client = None
         self.drive = None
-
-    def authorize(self, credentials: Any):
-        self.credentials = credentials
-        self.gspread_client = gspread.authorize(self.credentials)
-        gauth = GoogleAuth()
-        gauth.credentials = self.credentials
-        self.drive = GoogleDrive(gauth)
 
     def _get_keys_from_folder(
         self, key: str, file_type: str = None
@@ -47,11 +41,27 @@ class DriveETL:
         f.GetContentFile(path)
         return path
 
-    def run_etl(self, config_folder_key: str):
-        # Download config settings
+    def _load_yaml(self, path: str) -> object:
+        output = None
+        with open(path, "r") as stream:
+            try:
+                output = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+        return output
+
+    def authorize(self, credentials: Any) -> None:
+        self.credentials = credentials
+        self.gspread_client = gspread.authorize(self.credentials)
+        gauth = GoogleAuth()
+        gauth.credentials = self.credentials
+        self.drive = GoogleDrive(gauth)
+
+    def run_etl(self, config_folder_key: str) -> None:
+        # Import config settings
         config_keys = self._get_keys_from_folder(
             config_folder_key, file_type="yaml"
         )
-        self.config_key = config_keys[0]
-        config_path = self._download_drive_file(self.config_key)
-        return config_path
+        self._config_key = config_keys[0]
+        self._config_path = self._download_drive_file(self._config_key)
+        self._config = self._load_yaml(self._config_path)
