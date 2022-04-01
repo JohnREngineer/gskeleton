@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Union
 import gspread
 import pandas as pd
 import yaml
+from oauth2client.client import GoogleCredentials
 from pydantic import BaseModel
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -76,7 +77,7 @@ class DriveETL:
             output = yaml.safe_load(stream)
         return output
 
-    def authorize(self, credentials: Any) -> None:
+    def authorize(self, credentials: GoogleCredentials) -> None:
         self.credentials = credentials
         self.gspread_client = gspread.authorize(self.credentials)
         gauth = GoogleAuth()
