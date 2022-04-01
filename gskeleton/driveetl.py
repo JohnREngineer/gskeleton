@@ -1,12 +1,39 @@
 import sqlite3
 from sqlite3 import Error
-from typing import Any, List
+from typing import Any, List, Optional, Union
 
 import gspread
 import pandas as pd
 import yaml
+from pydantic import BaseModel
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
+
+
+class DriveLocation(BaseModel):
+    location_type: str
+    key: str
+    file_type: Optional[str]
+
+
+class SheetParams(BaseModel):
+    sheet: Union[str, int]
+    header_row: int
+    start_row: int
+
+
+class InputTable(BaseModel):
+    name: str
+    sheet_params: SheetParams = SheetParams(sheet=0, header_row=0, start_row=1)
+
+
+class InputDataset(BaseModel):
+    location: DriveLocation
+    tables: List[InputTable]
+
+
+class ETLConfig(BaseModel):
+    input_datasets: List[InputDataset]
 
 
 class DriveETL:
@@ -16,9 +43,7 @@ class DriveETL:
         # self.drive: GoogleDrive
         # self._db_conn: Optional[sqlite3.Connection]
 
-    def _get_keys_from_folder(
-        self, key: str, file_type: str = None
-    ) -> List[str]:
+    def _get_folder_keys(self, key: str, file_type: str = None) -> List[str]:
         mime_types = {
             "yaml": "application/x-yaml",
             "json": "application/json",
@@ -29,12 +54,12 @@ class DriveETL:
         )
         files = list_file.GetList()
         type_select = mime_types[file_type] if file_type else ""
-        output_files = [
-            (f.get("modifiedDate"), f.get("id"))
-            for f in files
-            if (file_type is None) or (f.get("mimeType") == type_select)
-        ]
-        sorted_files = sorted(output_files, key=(lambda x: x[0]), reverse=True)
+        file_infos = []
+        for f in files:
+            if (file_type is None) or (f.get("mimeType") == type_select):
+                file_info = (f.get("modifiedDate"), f.get("id"))
+                file_infos.append(file_info)
+        sorted_files = sorted(file_infos, key=(lambda x: x[0]), reverse=True)
         sorted_keys = [f[1] for f in sorted_files]
         return sorted_keys
 
@@ -45,7 +70,7 @@ class DriveETL:
         f.GetContentFile(path)
         return path
 
-    def _load_yaml(self, path: str) -> object:
+    def _load_yaml(self, path: str) -> Any:
         output = None
         with open(path, "r") as stream:
             output = yaml.safe_load(stream)
@@ -114,14 +139,27 @@ class DriveETL:
         df = pd.concat(dfs)
         return df
 
-    def run_etl(self, config_folder_key: str) -> None:
+    def _get_loc_key(self, loc: DriveLocation) -> Any:
+        key = ""
+        if loc.location_type == "folder":
+            sorted_keys = self._get_folder_keys(loc.key, loc.file_type)
+            key = sorted_keys[0]
+        elif loc.location_type == "file":
+            key = loc.key
+        else:
+            raise ValueError(f"location_type not found for {loc}")
+        return key
+
+    def _get_config(self, config_loc: DriveLocation) -> ETLConfig:
+        key = self._get_loc_key(config_loc)
+        path = self._download_drive_file(key)
+        data = self._load_yaml(path)
+        config = ETLConfig(**data)
+        return config
+
+    def run_etl(self, config_loc: DriveLocation) -> None:
         # Import config settings
-        config_keys = self._get_keys_from_folder(
-            config_folder_key, file_type="yaml"
-        )
-        self._config_key = config_keys[0]
-        self._config_path = self._download_drive_file(self._config_key)
-        self._config = self._load_yaml(self._config_path)
+        self.config = self._get_config(config_loc)
 
         # Initialize DB
 

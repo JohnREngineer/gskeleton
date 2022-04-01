@@ -45,13 +45,13 @@ def test_drive_etl_init(mocker):
         "gskeleton.driveetl.GoogleDrive.ListFile", return_value=list_file
     )
 
-    keys = etl._get_keys_from_folder("test_config_folder_key")
+    keys = etl._get_folder_keys("test_config_folder_key")
     assert keys == ["test_key3", "test_key2", "test_key1"]
 
-    keys = etl._get_keys_from_folder("test_config_folder_key", "yaml")
+    keys = etl._get_folder_keys("test_config_folder_key", "yaml")
     assert keys == ["test_key2", "test_key1"]
 
-    keys = etl._get_keys_from_folder("test_config_folder_key", "json")
+    keys = etl._get_folder_keys("test_config_folder_key", "json")
     assert keys == ["test_key3"]
 
     create_file = MockedCreateFile()
@@ -65,7 +65,6 @@ def test_drive_etl_init(mocker):
     mocker.patch("builtins.open", mocked_config_yaml)
     yaml = etl._load_yaml("test config")
     assert yaml == "mocked config settings"
-    # assert etl._config == "test_key2"
 
 
 def test_sqlite_init(mocker):
@@ -79,4 +78,3 @@ def test_sqlite_init(mocker):
     df = pd.DataFrame(data, columns=["product_name", "price"])
     df.to_sql("products", etl._db_conn, if_exists="replace", index=False)
     etl._close_db()
-    assert etl._db_conn is None
