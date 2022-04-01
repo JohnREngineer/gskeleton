@@ -39,7 +39,7 @@ class ETLConfig(BaseModel):
 
 class DriveETL:
     def __init__(self):
-        self.credentials: Any
+        self.credentials: GoogleCredentials
         # self.gspread_client: gspread.Client
         # self.drive: GoogleDrive
         # self._db_conn: Optional[sqlite3.Connection]
