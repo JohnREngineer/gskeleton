@@ -1,3 +1,5 @@
+import pandas as pd
+
 from gskeleton.driveetl import DriveETL
 
 
@@ -14,7 +16,7 @@ class MockedCreateFile:
         self.metadata = {"title": "mocked title"}
 
 
-def test_get_keys_from_folder(mocker):
+def test_drive_etl_init(mocker):
     mocker.patch(
         "gskeleton.driveetl.gspread.authorize",
         return_value="test_gspread_credentials",
@@ -59,5 +61,22 @@ def test_get_keys_from_folder(mocker):
     path = etl._download_drive_file("file_to_download")
     assert path == "mocked title"
 
-    etl.run_etl("test_config_folder_key")
-    assert etl._config_key == "test_key2"
+    mocked_config_yaml = mocker.mock_open(read_data="mocked config settings")
+    mocker.patch("builtins.open", mocked_config_yaml)
+    yaml = etl._load_yaml("test config")
+    assert yaml == "mocked config settings"
+    # assert etl._config == "test_key2"
+
+
+def test_sqlite_init(mocker):
+    etl = DriveETL()
+    etl._connect_to_db("test.db")
+    assert etl._db_conn is not None
+    data = {
+        "product_name": ["Computer", "Tablet", "Monitor", "Printer"],
+        "price": [900, 300, 450, 150],
+    }
+    df = pd.DataFrame(data, columns=["product_name", "price"])
+    df.to_sql("products", etl._db_conn, if_exists="replace", index=False)
+    etl._close_db()
+    assert etl._db_conn is None
