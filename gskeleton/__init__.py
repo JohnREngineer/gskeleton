@@ -11,7 +11,7 @@ __author__ = "John R"
 
 from oauth2client.client import GoogleCredentials
 
-from .driveetl import DriveETL
+from .driveetl import DriveETL, DriveLocation
 
 
 def authorize(credentials: GoogleCredentials) -> DriveETL:

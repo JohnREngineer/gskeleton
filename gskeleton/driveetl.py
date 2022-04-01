@@ -106,7 +106,7 @@ class DriveETL:
                 raise ValueError("Worksheet cannot be found at %s" % key)
             df = pd.DataFrame(sh.get_all_values())
             df.columns = df.iloc[int(headers)]
-            df = df.iloc[int(start) :]  # noqa: E203
+            df = df.iloc[int(start) :]
             df = df.reset_index(drop=True)
         return df, sh
 
