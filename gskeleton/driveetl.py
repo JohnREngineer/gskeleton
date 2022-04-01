@@ -38,12 +38,6 @@ class ETLConfig(BaseModel):
 
 
 class DriveETL:
-    def __init__(self):
-        self.credentials: GoogleCredentials
-        # self.gspread_client: gspread.Client
-        # self.drive: GoogleDrive
-        # self._db_conn: Optional[sqlite3.Connection]
-
     def _get_folder_keys(self, key: str, file_type: str = None) -> List[str]:
         mime_types = {
             "yaml": "application/x-yaml",
@@ -78,10 +72,9 @@ class DriveETL:
         return output
 
     def authorize(self, credentials: GoogleCredentials) -> None:
-        self.credentials = credentials
-        self.gspread_client = gspread.authorize(self.credentials)
+        self.gspread_client = gspread.authorize(credentials)
         gauth = GoogleAuth()
-        gauth.credentials = self.credentials
+        gauth.credentials = credentials
         self.drive = GoogleDrive(gauth)
 
     def _connect_to_db(self, db_path: str = "") -> None:
