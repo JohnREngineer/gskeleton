@@ -9,12 +9,12 @@ __version__ = "0.1.0"
 __author__ = "John R"
 
 
-from typing import Any
+from oauth2client.client import GoogleCredentials
 
 from .driveetl import DriveETL
 
 
-def authorize(credentials: Any) -> DriveETL:
+def authorize(credentials: GoogleCredentials) -> DriveETL:
     etl = DriveETL()
     etl.authorize(credentials)
     return etl
