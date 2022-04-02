@@ -69,12 +69,31 @@ def test_drive_etl_init(mocker):
 
 def test_sqlite_init(mocker):
     etl = DriveETL()
-    etl._connect_to_db("test.db")
-    assert etl._db_conn is not None
+    etl._connect_to_db(":memory:")
+    assert etl._db_connection is not None
     data = {
         "product_name": ["Computer", "Tablet", "Monitor", "Printer"],
         "price": [900, 300, 450, 150],
     }
     df = pd.DataFrame(data, columns=["product_name", "price"])
-    df.to_sql("products", etl._db_conn, if_exists="replace", index=False)
+    df.to_sql("products", etl._db_connection, if_exists="replace", index=False)
+
+    tables_query = """SELECT name FROM sqlite_master
+                      WHERE type='table';"""
+    cursor = etl._db_connection.cursor()
+    cursor.execute(tables_query)
+    result = cursor.fetchall()
+    assert result == [("products",)]
+
+    products_query = """SELECT * FROM products;"""
+    cursor = etl._db_connection.cursor()
+    cursor.execute(products_query)
+    result = cursor.fetchall()
+    assert result == [
+        ("Computer", 900),
+        ("Tablet", 300),
+        ("Monitor", 450),
+        ("Printer", 150),
+    ]
+
     etl._close_db()

@@ -81,15 +81,15 @@ class DriveETL:
         try:
             conn_path = db_path or ":memory:"
             conn = sqlite3.connect(conn_path)
-            self._db_conn = conn
+            self._db_connection = conn
             print(sqlite3.version)
         except Error as e:
             print(e)
 
     def _close_db(self) -> None:
-        if self._db_conn:
-            self._db_conn.close()
-            del self._db_conn
+        if self._db_connection:
+            self._db_connection.close()
+            del self._db_connection
 
     def __get_df_from_drive(
         self, key=None, sheet=0, headers=0, start=1, end=None
