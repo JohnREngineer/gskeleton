@@ -128,12 +128,13 @@ class DriveETL:
     def _simple_column_name(self, string):
         split_chars = ["\n", "?", "("]
         replace_chars = [","]
-        out_string = string.strip().lower().replace(" ", "_")
+        simple = string
         for s in split_chars:
-            out_string = out_string.split(s)[0]
+            simple = simple.split(s)[0]
         for r in replace_chars:
-            out_string = out_string.replace(r, "")
-        return out_string
+            simple = simple.replace(r, "")
+        simple = simple.strip().lower().replace(" ", "_")
+        return simple
 
     def _load_input_tables(self, keys: List[str], tables: List[InputTable]):
         df_lists: Dict[str, List[pd.DataFrame]] = {
