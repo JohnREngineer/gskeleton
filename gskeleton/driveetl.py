@@ -138,6 +138,9 @@ class DriveETL:
                 df_lists[table.name].append(df)
         for table in tables:
             df = pd.concat(df_lists[table.name])
+            df.to_sql(
+                table.name, self._db_conn, if_exists="replace", index=False
+            )
 
     def _extract_input_dataset(self, input_dataset: InputDataset):
         loc = input_dataset.location
@@ -156,8 +159,7 @@ class DriveETL:
     def _connect_to_db(self, db_path: str = None) -> None:
         try:
             conn_path = db_path or ":memory:"
-            conn = sqlite3.connect(conn_path)
-            self._db_conn = conn
+            self._db_conn = sqlite3.connect(conn_path)
         except Error as e:
             print(e)
 
@@ -178,7 +180,7 @@ class DriveETL:
         self.config = self._get_config(config_loc)
 
         # Initialize DB
-        self._connect_to_db()
+        self._connect_to_db("DriveETL.db")
 
         # Load inputs
         self.load_inputs()
