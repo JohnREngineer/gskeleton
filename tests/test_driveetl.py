@@ -80,13 +80,13 @@ def test_drive_etl_init(mocker):
         "gskeleton.driveetl.GoogleDrive.ListFile", return_value=list_file
     )
 
-    keys = etl._get_folder_keys("test_config_folder_key")
+    keys = etl._get_sorted_keys("test_config_folder_key")
     assert keys == ["test_key3", "test_key2", "test_key1"]
 
-    keys = etl._get_folder_keys("test_config_folder_key", "yaml")
+    keys = etl._get_sorted_keys("test_config_folder_key", "yaml")
     assert keys == ["test_key2", "test_key1"]
 
-    keys = etl._get_folder_keys("test_config_folder_key", "json")
+    keys = etl._get_sorted_keys("test_config_folder_key", "json")
     assert keys == ["test_key3"]
 
     create_file = MockedCreateFile()
@@ -105,23 +105,23 @@ def test_drive_etl_init(mocker):
 def test_sqlite_init(mocker):
     etl = DriveETL()
     etl._connect_to_db(":memory:")
-    assert etl._db_connection is not None
+    assert etl._db_conn is not None
     data = {
         "product_name": ["Computer", "Tablet", "Monitor", "Printer"],
         "price": [900, 300, 450, 150],
     }
     df = pd.DataFrame(data, columns=["product_name", "price"])
-    df.to_sql("products", etl._db_connection, if_exists="replace", index=False)
+    df.to_sql("products", etl._db_conn, if_exists="replace", index=False)
 
     tables_query = """SELECT name FROM sqlite_master
                       WHERE type='table';"""
-    cursor = etl._db_connection.cursor()
+    cursor = etl._db_conn.cursor()
     cursor.execute(tables_query)
     result = cursor.fetchall()
     assert result == [("products",)]
 
     products_query = """SELECT * FROM products;"""
-    cursor = etl._db_connection.cursor()
+    cursor = etl._db_conn.cursor()
     cursor.execute(products_query)
     result = cursor.fetchall()
     assert result == [
