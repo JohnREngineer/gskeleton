@@ -188,3 +188,6 @@ class DriveETL:
 
         # Load inputs
         self.load_inputs()
+
+        # Close DB
+        self._close_db()
