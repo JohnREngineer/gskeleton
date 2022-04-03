@@ -35,8 +35,14 @@ class InputDataset(BaseModel):
     tables: List[InputTable]
 
 
+class SQLTable(BaseModel):
+    name: str
+    command: str
+
+
 class ETLConfig(BaseModel):
     input_datasets: List[InputDataset]
+    sql_tables: Optional[List[SQLTable]]
 
 
 class DriveETL:
@@ -122,7 +128,7 @@ class DriveETL:
     def _simple_column_name(self, string):
         split_chars = ["\n", "?", "("]
         replace_chars = [","]
-        out_string = string.strip().upper()
+        out_string = string.strip().lower().replace(" ", "_")
         for s in split_chars:
             out_string = out_string.split(s)[0]
         for r in replace_chars:
