@@ -138,7 +138,7 @@ class DriveETL:
                 df_lists[table.name].append(df)
         for table in tables:
             df = pd.concat(df_lists[table.name])
-            print(df)
+            print(table.name, df.columns)
             df.to_sql(
                 table.name, self._db_conn, if_exists="replace", index=False
             )
