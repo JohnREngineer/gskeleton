@@ -12,8 +12,8 @@ from pydrive2.drive import GoogleDrive
 
 
 class DriveLocation(BaseModel):
-    location_type: str
     key: str
+    location_type: Optional[str]
     file_type: Optional[str]
 
 
@@ -158,7 +158,14 @@ class DriveETL:
         config = ETLConfig(**data)
         return config
 
-    def run_etl(self, config_loc: DriveLocation) -> None:
+    def run_etl(self, key: str, location_type: Optional[str]) -> None:
+        config_loc_type = location_type if location_type else "file"
+        config_vars = {
+            "key": key,
+            "location_type": config_loc_type,
+            "file_type": "yaml",
+        }
+        config_loc = DriveLocation(**config_vars)
         # Import config settings
         self.config = self._get_config(config_loc)
 
