@@ -14,7 +14,7 @@ from pydrive2.drive import GoogleDrive
 class DriveLocation(BaseModel):
     key: str
     type: Optional[str]
-    file_type: Optional[str]
+    mime_type: Optional[str]
 
 
 class SheetSpec(BaseModel):
@@ -84,7 +84,7 @@ class DriveETL:
     def _get_loc_key(self, loc: DriveLocation) -> str:
         key = ""
         if loc.type == "folder":
-            sorted_keys = self._get_sorted_keys(loc.key, loc.file_type)
+            sorted_keys = self._get_sorted_keys(loc.key, loc.mime_type)
             key = sorted_keys[0]
         elif loc.type == "file":
             key = loc.key
@@ -145,7 +145,7 @@ class DriveETL:
     def _extract_input_dataset(self, input_dataset: InputDataset):
         loc = input_dataset.location
         if loc.type == "folder":
-            input_keys = self._get_sorted_keys(loc.key, loc.file_type)
+            input_keys = self._get_sorted_keys(loc.key, loc.mime_type)
             self._load_input_tables(input_keys, input_dataset.tables)
         else:
             raise ValueError(
