@@ -17,20 +17,23 @@ class DriveLocation(BaseModel):
     file_type: Optional[str]
 
 
-class SheetParams(BaseModel):
-    sheet: Union[str, int]
-    header_row: int
-    start_row: int
+class SheetSpec(BaseModel):
+    sheet_id: Optional[Union[str, int]] = 0
+    header_row: Optional[int] = 0
+    start_row: Optional[int] = 1
 
 
 class InputTable(BaseModel):
-    name: str
-    sheet_params: SheetParams = SheetParams(sheet=0, header_row=0, start_row=1)
+    table_name: str
+    sheet_spec: Optional[SheetSpec] = SheetSpec(
+        sheet=0, header_row=0, start_row=1
+    )
 
 
 class InputDataset(BaseModel):
+    dataset_name: str
     location: DriveLocation
-    tables: List[InputTable]
+    input_tables: List[InputTable]
 
 
 class ETLConfig(BaseModel):
