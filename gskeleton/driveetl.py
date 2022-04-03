@@ -35,14 +35,13 @@ class InputDataset(BaseModel):
     tables: List[InputTable]
 
 
-class SQLTable(BaseModel):
-    name: str
-    command: str
+class SQLCommand(BaseModel):
+    text: str
 
 
 class ETLConfig(BaseModel):
     input_datasets: List[InputDataset]
-    sql_tables: Optional[List[SQLTable]]
+    sql_commands: Optional[List[str]]
 
 
 class DriveETL:
@@ -166,19 +165,29 @@ class DriveETL:
         for input_dataset in self.config.input_datasets:
             self._extract_input_dataset(input_dataset)
 
-    def _connect_to_db(self, db_path: str = None) -> None:
+    def _connect_to_db(self, db_path: str = None):
         try:
             conn_path = db_path or ":memory:"
             self._db_conn = sqlite3.connect(conn_path)
         except Error as e:
             print(e)
 
-    def _close_db(self) -> None:
+    def execute_commands(self):
+        cursor = self._db_conn.cursor()
+        for command in self.config.sql_commands:
+            try:
+                cursor.execute(command)
+                result = cursor.fetchall()
+                print(result)
+            except Error as e:
+                print(e)
+
+    def _close_db(self):
         if self._db_conn:
             self._db_conn.close()
             del self._db_conn
 
-    def run_etl(self, key: str, location_type: Optional[str]) -> None:
+    def run_etl(self, key: str, location_type: Optional[str]):
         config_loc_type = location_type if location_type else "file"
         config_loc_dict = {
             "key": key,
@@ -186,14 +195,8 @@ class DriveETL:
             "mime_type": "application/x-yaml",
         }
         config_loc = DriveLocation(**config_loc_dict)
-        # Import config settings
         self.config = self._get_config(config_loc)
-
-        # Initialize DB
         self._connect_to_db("DriveETL.db")
-
-        # Load inputs
         self.load_inputs()
-
-        # Close DB
+        self.execute_commands()
         self._close_db()
