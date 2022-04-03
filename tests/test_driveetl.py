@@ -83,10 +83,10 @@ def test_drive_etl_init(mocker):
     keys = etl._get_sorted_keys("test_config_folder_key")
     assert keys == ["test_key3", "test_key2", "test_key1"]
 
-    keys = etl._get_sorted_keys("test_config_folder_key", "yaml")
+    keys = etl._get_sorted_keys("test_config_folder_key", "application/x-yaml")
     assert keys == ["test_key2", "test_key1"]
 
-    keys = etl._get_sorted_keys("test_config_folder_key", "json")
+    keys = etl._get_sorted_keys("test_config_folder_key", "application/json")
     assert keys == ["test_key3"]
 
     create_file = MockedCreateFile()

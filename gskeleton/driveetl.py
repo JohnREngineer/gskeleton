@@ -13,7 +13,7 @@ from pydrive2.drive import GoogleDrive
 
 class DriveLocation(BaseModel):
     key: str
-    location_type: Optional[str]
+    type: Optional[str]
     file_type: Optional[str]
 
 
@@ -40,21 +40,15 @@ class ETLConfig(BaseModel):
 
 class DriveETL:
     def _get_sorted_keys(
-        self, folder_key: str, file_type: str = None
+        self, folder_key: str, mime_type: str = None
     ) -> List[str]:
-        mime_types = {
-            "yaml": "application/x-yaml",
-            "json": "application/json",
-            "spreadsheet": "application/vnd.google-apps.spreadsheet",
-        }
         list_file = self.drive.ListFile(
             {"q": "'{}' in parents and trashed=false".format(folder_key)}
         )
         files = list_file.GetList()
-        type_select = mime_types[file_type] if file_type else ""
         file_infos = []
         for f in files:
-            if (file_type is None) or (f.get("mimeType") == type_select):
+            if (not mime_type) or (f.get("mimeType") == mime_type):
                 file_info = (f.get("modifiedDate"), f.get("id"))
                 file_infos.append(file_info)
         sorted_files = sorted(file_infos, key=(lambda x: x[0]), reverse=True)
@@ -89,13 +83,13 @@ class DriveETL:
 
     def _get_loc_key(self, loc: DriveLocation) -> str:
         key = ""
-        if loc.location_type == "folder":
+        if loc.type == "folder":
             sorted_keys = self._get_sorted_keys(loc.key, loc.file_type)
             key = sorted_keys[0]
-        elif loc.location_type == "file":
+        elif loc.type == "file":
             key = loc.key
         else:
-            raise ValueError(f"location_type not found for {loc}")
+            raise ValueError(f"location.type not found for {loc}")
         return key
 
     def _get_config(self, config_loc: DriveLocation) -> ETLConfig:
@@ -147,12 +141,12 @@ class DriveETL:
 
     def _extract_input_dataset(self, input_dataset: InputDataset):
         loc = input_dataset.location
-        if loc.location_type == "folder":
+        if loc.type == "folder":
             input_keys = self._get_sorted_keys(loc.key, loc.file_type)
             self._load_input_tables(input_keys, input_dataset.tables)
         else:
             raise ValueError(
-                f"InputDataset location_type {loc.location_type} is not valid"
+                f"InputDataset location.type {loc.type} is not valid"
             )
 
     def load_inputs(self):
@@ -174,12 +168,12 @@ class DriveETL:
 
     def run_etl(self, key: str, location_type: Optional[str]) -> None:
         config_loc_type = location_type if location_type else "file"
-        config_vars = {
+        config_loc_dict = {
             "key": key,
-            "location_type": config_loc_type,
-            "file_type": "yaml",
+            "type": config_loc_type,
+            "mime_type": "application/x-yaml",
         }
-        config_loc = DriveLocation(**config_vars)
+        config_loc = DriveLocation(**config_loc_dict)
         # Import config settings
         self.config = self._get_config(config_loc)
 
