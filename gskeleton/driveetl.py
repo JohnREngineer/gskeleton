@@ -104,7 +104,7 @@ class DriveETL:
     ):
         sh = None
         if str(spec.sheet_id).isnumeric():
-            sh = workbook.get_worksheet(spec.sheet_id)
+            sh = workbook.get_worksheet(int(spec.sheet_id))
         else:
             sh = workbook.worksheet(spec.sheet_id)
         if not sh:
