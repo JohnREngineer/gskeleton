@@ -5,7 +5,7 @@ from typing import Any, List, Optional, Union
 import gspread
 import pandas as pd
 import yaml
-from oauth2client.client import GoogleCredentials
+from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -71,10 +71,17 @@ class DriveETL:
             output = yaml.safe_load(stream)
         return output
 
-    def authorize(self, credentials: GoogleCredentials) -> None:
-        self.gspread_client = gspread.authorize(credentials)
+    def service_auth(self, secret_path: str) -> None:
+        self.gspread_client = gspread.service_account(filename=secret_path)
+        scope = [
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets",
+        ]
         gauth = GoogleAuth()
-        gauth.credentials = credentials
+        gauth.auth_method = "service"
+        gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(
+            secret_path, scope
+        )
         self.drive = GoogleDrive(gauth)
 
     def _connect_to_db(self, db_path: str = "") -> None:
@@ -91,7 +98,7 @@ class DriveETL:
             self._db_connection.close()
             del self._db_connection
 
-    def __get_df_from_drive(
+    def _get_df_from_drive(
         self, key=None, sheet=0, headers=0, start=1, end=None
     ):
         df, sh = None, None
@@ -125,7 +132,7 @@ class DriveETL:
         for key in input_keys:
             full_location = defaults.copy()
             full_location.update({"key": key})
-            af = self.__get_df_from_drive(**full_location)[0]
+            af = self._get_df_from_drive(**full_location)[0]
             af.columns = [
                 self.__split_and_replace(c).strip().upper() for c in af.columns
             ]

@@ -16,13 +16,48 @@ class MockedCreateFile:
         self.metadata = {"title": "mocked title"}
 
 
+def test_drive_etl_auth(mocker):
+    mock_gspread_auth = mocker.patch(
+        "gskeleton.driveetl.gspread.service_account",
+        return_value="mocked_gspread_client",
+    )
+    mock_drive_auth = mocker.patch(
+        "gskeleton.driveetl.ServiceAccountCredentials.from_json_keyfile_name",
+        return_value="mocked_drive_credentials",
+    )
+    mock_google_drive = mocker.patch(
+        "gskeleton.driveetl.GoogleDrive", return_value="mocked_drive"
+    )
+
+    etl = DriveETL()
+    scope = [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/spreadsheets",
+    ]
+    service_path = "/test/test_location.json"
+    etl.service_auth(service_path)
+    assert mock_gspread_auth.call_args[1]["filename"] == service_path
+    assert etl.gspread_client == "mocked_gspread_client"
+    assert etl.drive == "mocked_drive"
+    assert mock_drive_auth.call_args[0][0] == service_path
+    assert mock_drive_auth.call_args[0][1] == scope
+    gauth = mock_google_drive.call_args[0][0]
+    assert gauth.auth_method == "service"
+    assert gauth.credentials == "mocked_drive_credentials"
+
+
 def test_drive_etl_init(mocker):
     mocker.patch(
-        "gskeleton.driveetl.gspread.authorize",
-        return_value="test_gspread_credentials",
+        "gskeleton.driveetl.gspread.service_account",
+        return_value="mocked_gspread_client",
     )
+    mocker.patch(
+        "gskeleton.driveetl.ServiceAccountCredentials.from_json_keyfile_name",
+        return_value="mocked_drive_credentials",
+    )
+
     etl = DriveETL()
-    etl.authorize("test_credentials")
+    etl.service_auth("test_path.json")
     my_list = [
         {
             "id": "test_key1",
