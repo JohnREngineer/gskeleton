@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from gskeleton.driveetl import DriveETL
 
@@ -14,6 +15,44 @@ class MockedCreateFile:
 
     def FetchMetadata(self, fetch_all=None):
         self.metadata = {"title": "mocked title"}
+
+
+def test_col_names(mocker):
+    etl = DriveETL()
+    with pytest.raises(ValueError):
+        etl._get_sql_col("")
+    with pytest.raises(ValueError):
+        etl._get_sql_col(" ")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("   ")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("\t")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("\t\t\t")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("\t \t")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("!")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("!@")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("! @")
+    with pytest.raises(ValueError):
+        etl._get_sql_col("!\t @")
+    assert etl._get_sql_col("A") == "a"
+    assert etl._get_sql_col("A1") == "a1"
+    assert etl._get_sql_col("A_1") == "a_1"
+    assert etl._get_sql_col("A1b2C3") == "a1b2c3"
+    assert etl._get_sql_col("123") == "123"
+    assert etl._get_sql_col("a b") == "a_b"
+    assert etl._get_sql_col(" a b ") == "a_b"
+    assert etl._get_sql_col("a   b") == "a_b"
+    assert etl._get_sql_col("\ta\tb\t") == "a_b"
+    assert etl._get_sql_col("a\t\t\tb") == "a_b"
+    assert etl._get_sql_col("a!b") == "a_b"
+    assert etl._get_sql_col("!a!b!") == "a_b"
+    assert etl._get_sql_col("! a ! b !") == "a_b"
+    assert etl._get_sql_col("! \tA1! !b2@!\t!C3#\t ! \tD4 !") == "a1_b2_c3_d4"
 
 
 def test_drive_etl_auth(mocker):
@@ -57,6 +96,7 @@ def test_drive_etl_init(mocker):
     )
 
     etl = DriveETL()
+    assert etl.file_types.get("yaml") is not None
     etl.service_auth("test_path.json")
     my_list = [
         {
@@ -89,17 +129,17 @@ def test_drive_etl_init(mocker):
     keys = etl._get_sorted_keys("test_config_folder_key", "application/json")
     assert keys == ["test_key3"]
 
-    create_file = MockedCreateFile()
     mocker.patch(
-        "gskeleton.driveetl.GoogleDrive.CreateFile", return_value=create_file
+        "gskeleton.driveetl.GoogleDrive.CreateFile",
+        return_value=MockedCreateFile(),
     )
     path = etl._download_drive_file("file_to_download")
     assert path == "mocked title"
 
     mocked_config_yaml = mocker.mock_open(read_data="mocked config settings")
     mocker.patch("builtins.open", mocked_config_yaml)
-    yaml = etl._load_yaml("test config")
-    assert yaml == "mocked config settings"
+
+    # TODO: test _load_config
 
 
 def test_sqlite_init(mocker):

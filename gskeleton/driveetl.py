@@ -1,6 +1,7 @@
+import re
 import sqlite3
 from sqlite3 import Error
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import gspread
 import pandas as pd
@@ -14,7 +15,7 @@ from pydrive2.drive import GoogleDrive
 class DriveLocation(BaseModel):
     key: str
     type: Optional[str]
-    mime_type: Optional[str]
+    file_type: Optional[str]
 
 
 class SheetSpec(BaseModel):
@@ -40,13 +41,17 @@ class SQLCommand(BaseModel):
 
 
 class ETLConfig(BaseModel):
-    input_datasets: List[InputDataset]
+    input_datasets: Optional[List[InputDataset]]
     sql_commands: Optional[List[SQLCommand]]
 
 
 class DriveETL:
+    def __init__(self):
+        with open("gskeleton/mime_types.yaml", "r") as stream:
+            self.file_types = yaml.safe_load(stream)
+
     def _get_sorted_keys(
-        self, folder_key: str, mime_type: str = None
+        self, folder_key: str, file_type: str = None
     ) -> List[str]:
         list_file = self.drive.ListFile(
             {"q": "'{}' in parents and trashed=false".format(folder_key)}
@@ -54,7 +59,7 @@ class DriveETL:
         files = list_file.GetList()
         file_infos = []
         for f in files:
-            if (not mime_type) or (f.get("mimeType") == mime_type):
+            if (not file_type) or (f.get("mimeType") == file_type):
                 file_info = (f.get("modifiedDate"), f.get("id"))
                 file_infos.append(file_info)
         sorted_files = sorted(file_infos, key=(lambda x: x[0]), reverse=True)
@@ -67,12 +72,6 @@ class DriveETL:
         path = f.metadata["title"]
         f.GetContentFile(path)
         return path
-
-    def _load_yaml(self, path: str) -> Any:
-        output = None
-        with open(path, "r") as stream:
-            output = yaml.safe_load(stream)
-        return output
 
     def service_auth(self, secret_path: str) -> None:
         self.gspread_client = gspread.service_account(filename=secret_path)
@@ -90,7 +89,7 @@ class DriveETL:
     def _get_loc_key(self, loc: DriveLocation) -> str:
         key = ""
         if loc.type == "folder":
-            sorted_keys = self._get_sorted_keys(loc.key, loc.mime_type)
+            sorted_keys = self._get_sorted_keys(loc.key, loc.file_type)
             key = sorted_keys[0]
         elif loc.type == "file":
             key = loc.key
@@ -98,12 +97,17 @@ class DriveETL:
             raise ValueError(f"location.type not found for {loc}")
         return key
 
-    def _get_config(self, config_loc: DriveLocation) -> ETLConfig:
+    def _load_config(self, config_loc: DriveLocation):
         key = self._get_loc_key(config_loc)
         path = self._download_drive_file(key)
-        data = self._load_yaml(path)
-        config = ETLConfig(**data)
-        return config
+        config = None
+        with open(path, "r") as stream:
+            data = yaml.safe_load(stream)
+            config = ETLConfig(**data)
+        if config:
+            self.config = config
+        else:
+            raise ValueError(f"Cannot load config file {config_loc}")
 
     def _get_df_from_workbook(
         self, workbook: gspread.Spreadsheet, spec: SheetSpec
@@ -124,16 +128,13 @@ class DriveETL:
         df = df.reset_index(drop=True)
         return df
 
-    def _simple_column_name(self, string):
-        split_chars = ["\n", "?", "("]
-        replace_chars = [","]
-        simple = string
-        for s in split_chars:
-            simple = simple.split(s)[0]
-        for r in replace_chars:
-            simple = simple.replace(r, "")
-        simple = simple.strip().lower().replace(" ", "_")
-        return simple
+    def _get_sql_col(self, column_name: str):
+        lower = column_name.lower()
+        words = re.findall(r"\w+", lower)
+        col = "_".join(words)
+        if not col:
+            raise ValueError(f"column name is invalid: {column_name}")
+        return col
 
     def _load_input_tables(self, keys: List[str], tables: List[InputTable]):
         df_lists: Dict[str, List[pd.DataFrame]] = {
@@ -143,7 +144,7 @@ class DriveETL:
             wb = self.gspread_client.open_by_key(key)
             for table in tables:
                 df = self._get_df_from_workbook(wb, table.sheet_spec)
-                df.columns = [self._simple_column_name(c) for c in df.columns]
+                df.columns = [self._get_sql_col(c) for c in df.columns]
                 df_lists[table.name].append(df)
         for table in tables:
             df = pd.concat(df_lists[table.name])
@@ -154,7 +155,7 @@ class DriveETL:
     def _extract_input_dataset(self, input_dataset: InputDataset):
         loc = input_dataset.location
         if loc.type == "folder":
-            input_keys = self._get_sorted_keys(loc.key, loc.mime_type)
+            input_keys = self._get_sorted_keys(loc.key, loc.file_type)
             self._load_input_tables(input_keys, input_dataset.tables)
         else:
             raise ValueError(
@@ -192,10 +193,10 @@ class DriveETL:
         config_loc_dict = {
             "key": key,
             "type": config_loc_type,
-            "mime_type": "application/x-yaml",
+            "file_type": "application/x-yaml",
         }
         config_loc = DriveLocation(**config_loc_dict)
-        self.config = self._get_config(config_loc)
+        self._load_config(config_loc)
         self._connect_to_db("DriveETL.db")
         self.load_inputs()
         self.execute_commands()
