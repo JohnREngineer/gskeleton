@@ -21,6 +21,7 @@ class SheetSpec(BaseModel):
     sheet_id: Union[str, int] = 0
     header_row: int = 0
     start_row: int = 1
+    start_column: int = 0
 
 
 class InputTable(BaseModel):
@@ -111,6 +112,8 @@ class DriveETL:
             val_err = f"Worksheet cannot be found at {spec} in {workbook.id}"
             raise ValueError(val_err)
         df = pd.DataFrame(sh.get_all_values())
+        cols = [c for i, c in enumerate(df.columns) if i >= spec.start_column]
+        df = df[cols]
         df.columns = df.iloc[spec.header_row]
         df = df.iloc[spec.start_row :]
         df = df.reset_index(drop=True)
