@@ -41,7 +41,7 @@ class SQLCommand(BaseModel):
 
 class ETLConfig(BaseModel):
     input_datasets: List[InputDataset]
-    sql_commands: Optional[List[str]]
+    sql_commands: Optional[List[SQLCommand]]
 
 
 class DriveETL:
@@ -176,7 +176,7 @@ class DriveETL:
         cursor = self._db_conn.cursor()
         for command in self.config.sql_commands:
             try:
-                cursor.execute(command)
+                cursor.execute(command.text)
                 result = cursor.fetchall()
                 print(result)
             except Error as e:
