@@ -1,10 +1,10 @@
 import gskeleton
-from gskeleton.driveetl import DriveETL
+from gskeleton.drive_etl import DriveETL
 
 
 def test_gskeleton(mocker):
     mock_service_auth = mocker.patch(
-        "gskeleton.driveetl.DriveETL.service_auth",
+        "gskeleton.drive_etl.DriveETL.service_auth",
     )
     test_path = "test/test_path.json"
     gs = gskeleton.authorize(test_path)

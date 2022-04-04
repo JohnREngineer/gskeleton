@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from gskeleton.driveetl import DriveETL
+from gskeleton.drive_etl import DriveETL, GFile, GFileSelector, GFolder
 
 
 class MockedListFile:
@@ -57,15 +57,15 @@ def test_col_names(mocker):
 
 def test_drive_etl_auth(mocker):
     mock_gspread_auth = mocker.patch(
-        "gskeleton.driveetl.gspread.service_account",
+        "gskeleton.drive_etl.gspread.service_account",
         return_value="mocked_gspread_client",
     )
     mock_drive_auth = mocker.patch(
-        "gskeleton.driveetl.ServiceAccountCredentials.from_json_keyfile_name",
+        "gskeleton.drive_etl.ServiceAccountCredentials.from_json_keyfile_name",
         return_value="mocked_drive_credentials",
     )
     mock_google_drive = mocker.patch(
-        "gskeleton.driveetl.GoogleDrive", return_value="mocked_drive"
+        "gskeleton.drive_etl.GoogleDrive", return_value="mocked_drive"
     )
 
     etl = DriveETL()
@@ -87,53 +87,60 @@ def test_drive_etl_auth(mocker):
 
 def test_drive_etl_init(mocker):
     mocker.patch(
-        "gskeleton.driveetl.gspread.service_account",
+        "gskeleton.drive_etl.gspread.service_account",
         return_value="mocked_gspread_client",
     )
     mocker.patch(
-        "gskeleton.driveetl.ServiceAccountCredentials.from_json_keyfile_name",
+        "gskeleton.drive_etl.ServiceAccountCredentials.from_json_keyfile_name",
         return_value="mocked_drive_credentials",
     )
 
     etl = DriveETL()
-    assert etl.file_types.get("yaml") is not None
+    assert etl.mime_types.get("yaml") is not None
     etl.service_auth("test_path.json")
     my_list = [
         {
-            "id": "test_key1",
+            "id": "1key",
+            "title": "File1.yaml",
             "mimeType": "application/x-yaml",
             "modifiedDate": "1",
         },
         {
-            "id": "test_key2",
+            "id": "2key",
+            "title": "File2.yaml",
             "mimeType": "application/x-yaml",
             "modifiedDate": "2",
         },
         {
-            "id": "test_key3",
+            "id": "3key",
+            "title": "File3.json",
             "mimeType": "application/json",
             "modifiedDate": "3",
         },
     ]
     list_file = MockedListFile(my_list)
     mocker.patch(
-        "gskeleton.driveetl.GoogleDrive.ListFile", return_value=list_file
+        "gskeleton.drive_etl.GoogleDrive.ListFile", return_value=list_file
     )
+    folder = GFolder(key="test_folder_key")
+    file1 = GFile(key="1key")
+    file2 = GFile(key="2key")
+    file3 = GFile(key="3key")
 
-    keys = etl._get_sorted_keys("test_config_folder_key")
-    assert keys == ["test_key3", "test_key2", "test_key1"]
+    files = etl._select_files(GFileSelector(folder=folder))
+    assert files == [file1, file2, file3]
 
-    keys = etl._get_sorted_keys("test_config_folder_key", "application/x-yaml")
-    assert keys == ["test_key2", "test_key1"]
+    files = etl._select_files(GFileSelector(folder=folder, extension="yaml"))
+    assert files == [file1, file2]
 
-    keys = etl._get_sorted_keys("test_config_folder_key", "application/json")
-    assert keys == ["test_key3"]
+    files = etl._select_files(GFileSelector(folder=folder, extension="json"))
+    assert files == [file3]
 
     mocker.patch(
-        "gskeleton.driveetl.GoogleDrive.CreateFile",
+        "gskeleton.drive_etl.GoogleDrive.CreateFile",
         return_value=MockedCreateFile(),
     )
-    path = etl._download_drive_file("file_to_download")
+    path = etl._download_drive_file(file2)
     assert path == "mocked title"
 
     mocked_config_yaml = mocker.mock_open(read_data="mocked config settings")
