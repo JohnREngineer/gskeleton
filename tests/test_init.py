@@ -1,11 +1,12 @@
 import gskeleton
+from gskeleton.drive_etl import DriveETL
 
 
 def test_gskeleton(mocker):
-    mocker.patch(
-        "gskeleton.driveetl.gspread.authorize",
-        return_value="test_gspread_credentials",
+    mock_service_auth = mocker.patch(
+        "gskeleton.drive_etl.DriveETL.service_auth",
     )
-    gs = gskeleton.authorize("test_credentials")
-    assert gs.gspread_client == "test_gspread_credentials"
-    assert gs.drive.auth.credentials == "test_credentials"
+    test_path = "test/test_path.json"
+    gs = gskeleton.authorize(test_path)
+    assert isinstance(gs, DriveETL)
+    assert mock_service_auth.call_args[0][0] == test_path

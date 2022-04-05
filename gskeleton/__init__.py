@@ -8,13 +8,10 @@ Google Drive ETL library.
 __version__ = "0.1.0"
 __author__ = "John R"
 
-
-from typing import Any
-
-from .driveetl import DriveETL
+from .drive_etl import DriveETL
 
 
-def authorize(credentials: Any) -> DriveETL:
+def authorize(secret_path: str) -> DriveETL:
     etl = DriveETL()
-    etl.authorize(credentials)
+    etl.service_auth(secret_path)
     return etl
