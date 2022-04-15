@@ -82,8 +82,16 @@ class ETLConfig(BaseModel):
 class DriveETL:
     def __init__(self):
         self.start_unix = str(int(time.time()))
-        with open("gskeleton/mime_types.yaml", "r") as stream:
-            self.mime_types: Dict[str, str] = yaml.safe_load(stream)
+        self.mime_types = {
+            "json": "application/json",
+            "gsheet": "application/vnd.google-apps.spreadsheet",
+            "xlsx": (
+                "application/"
+                "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
+            "yaml": "application/x-yaml",
+            "csv": "text/csv",
+        }
         self.config: ETLConfig
 
     def _select_files(self, fs: GFileSelector) -> List[GFile]:
