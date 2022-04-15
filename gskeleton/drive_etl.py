@@ -273,7 +273,7 @@ class DriveETL:
             result = cursor.fetchall()
             df = pd.DataFrame(result)
             df_dict[table.name] = df
-        if loader.suffix_type == "xlsx":
+        if loader.extension == "xlsx":
             load_path = self._get_load_filename(loader)
             if loader.template:
                 template_path = self._download_drive_file(loader.template)
