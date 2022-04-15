@@ -184,7 +184,8 @@ class DriveETL:
         return self._get_worksheet_box(worksheet, sheet.box)
 
     def _get_sql_col(self, column_name: str) -> str:
-        lower = column_name.lower()
+        first_line = column_name.split("\n")[0]
+        lower = first_line.lower()
         words = re.findall(r"\w+", lower)
         col = "_".join(words)
         if not col:
