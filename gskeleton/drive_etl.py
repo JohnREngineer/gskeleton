@@ -201,6 +201,7 @@ class DriveETL:
             wb = self.gspread_client.open_by_key(file.key)
             for table in extractor.tables:
                 df = self._get_workbook_sheet(wb, table.sheet)
+                print(df.columns)
                 df.columns = [self._get_sql_col(c) for c in df.columns]
                 df_lists[table.name].append(df)
         for table in extractor.tables:
