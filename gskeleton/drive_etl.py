@@ -195,10 +195,10 @@ class DriveETL:
         df_lists: Dict[str, List[pd.DataFrame]] = {
             table.name: [] for table in extractor.tables
         }
-        keys = self._select_files(extractor.inputs)
-        print(keys)
-        for key in keys:
-            wb = self.gspread_client.open_by_key(key)
+        files = self._select_files(extractor.inputs)
+        print(files)
+        for file in files:
+            wb = self.gspread_client.open_by_key(file.key)
             for table in extractor.tables:
                 df = self._get_workbook_sheet(wb, table.sheet)
                 df.columns = [self._get_sql_col(c) for c in df.columns]
