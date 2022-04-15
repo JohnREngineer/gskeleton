@@ -100,7 +100,7 @@ class DriveETL:
             if fs.extension:
                 mime_type = self.mime_types.get(fs.extension)
                 if mime_type:
-                    (file.get("mimeType") == mime_type)
+                    match = file.get("mimeType") == mime_type
             return match
 
         query = {"q": f"'{fs.folder.key}' in parents and trashed=false"}
