@@ -196,6 +196,7 @@ class DriveETL:
             table.name: [] for table in extractor.tables
         }
         keys = self._select_files(extractor.inputs)
+        print(keys)
         for key in keys:
             wb = self.gspread_client.open_by_key(key)
             for table in extractor.tables:
