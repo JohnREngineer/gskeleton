@@ -205,6 +205,7 @@ class DriveETL:
                 df = self._get_workbook_sheet(wb, table.sheet)
                 print(df.columns)
                 df.columns = [self._get_sql_col(c) for c in df.columns]
+                print(df.columns)
                 df_lists[table.name].append(df)
         for table in extractor.tables:
             df = pd.concat(df_lists[table.name])
