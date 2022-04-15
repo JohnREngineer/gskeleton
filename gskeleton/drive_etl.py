@@ -281,7 +281,9 @@ class DriveETL:
             for table in loader.tables:
                 self._xlsx_load_sheet(table.sheet, load_path, df)
             create_file_options = {
-                "parents": [{"kind": "drive#fileLink", "id": loader.exports}]
+                "parents": [
+                    {"kind": "drive#fileLink", "id": loader.exports.key}
+                ]
             }
             f = self.drive.CreateFile(create_file_options)
             f.SetContentFile(load_path)
