@@ -198,6 +198,7 @@ class DriveETL:
         files = self._select_files(extractor.inputs)
         print(files)
         for file in files:
+            print(file)
             wb = self.gspread_client.open_by_key(file.key)
             for table in extractor.tables:
                 df = self._get_workbook_sheet(wb, table.sheet)
