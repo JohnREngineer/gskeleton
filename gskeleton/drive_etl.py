@@ -299,7 +299,12 @@ class DriveETL:
             self._load_config_from_folder(GFolder(key=key))
         else:
             self._load_config_from_file(GFile(key=key))
-        self._connect_to_db(":memory:")
+        db_path = "DriveETL.db"
+        try:
+            os.remove(db_path)
+        except OSError:
+            pass
+        self._connect_to_db(db_path)
         self._run_extractors()
         self._run_transformers()
         self._run_loaders()
