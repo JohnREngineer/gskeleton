@@ -91,6 +91,7 @@ class DriveETL:
             ),
             "yaml": "application/x-yaml",
             "csv": "text/csv",
+            "db": "application/x-sqlite3",
         }
         self.config: ETLConfig
 
@@ -298,7 +299,7 @@ class DriveETL:
             self._load_config_from_folder(GFolder(key=key))
         else:
             self._load_config_from_file(GFile(key=key))
-        self._connect_to_db("DriveETL.db")
+        self._connect_to_db(":memory:")
         self._run_extractors()
         self._run_transformers()
         self._run_loaders()
