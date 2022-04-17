@@ -273,6 +273,7 @@ class DriveETL:
             cursor.execute(query)
             result = cursor.fetchall()
             df = pd.DataFrame(result)
+            df.columns = next(zip(*cursor.description))
             df_dict[table.name] = df
         if loader.extension == "xlsx":
             load_path = self._get_load_filename(loader)
