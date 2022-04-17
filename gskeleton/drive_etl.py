@@ -73,7 +73,13 @@ class Loader(BaseModel):
     tables: List[Table]
 
 
+class Database(BaseModel):
+    key: str
+    update: bool = False
+
+
 class ETLConfig(BaseModel):
+    database: Optional[Database]
     extractors: Optional[List[Extractor]]
     transformers: Optional[List[Transformer]]
     loaders: Optional[List[Loader]]
@@ -94,6 +100,7 @@ class DriveETL:
             "db": "application/x-sqlite3",
         }
         self.config: ETLConfig
+        self.db: Database
 
     def _select_files(self, fs: GFileSelector) -> List[GFile]:
         def extension_match(file: Dict):
@@ -218,12 +225,20 @@ class DriveETL:
         for extractor in self.config.extractors:
             self._extract_tables(extractor)
 
-    def _connect_to_db(self, db_path: str = None):
+    def _connect_to_db(self):
+        conn_path = ":memory:"
+        if self.db.key:
+            db_file = GFile(**{"key": self.db.key})
+            conn_path = self._download_drive_file(db_file)
+            self._conn_path = conn_path
         try:
-            conn_path = db_path or ":memory:"
             self._db_conn = sqlite3.connect(conn_path)
         except Error as e:
             print(e)
+
+    def _update_db_source(self):
+        if self.db.update and self._conn_path:
+            self._update_file(self._conn_path, self.db.key)
 
     def _close_db(self):
         if self._db_conn:
@@ -240,7 +255,7 @@ class DriveETL:
             except Error as e:
                 print(e)
 
-    def _get_load_filename(self, loader: Loader) -> str:
+    def _get_loader_filename(self, loader: Loader) -> str:
         suffix = ""
         if loader.suffix_type == "unix":
             suffix = self.start_unix
@@ -276,20 +291,25 @@ class DriveETL:
             df.columns = next(zip(*cursor.description))
             df_dict[table.name] = df
         if loader.extension == "xlsx":
-            load_path = self._get_load_filename(loader)
+            load_path = self._get_loader_filename(loader)
             if loader.template:
                 template_path = self._download_drive_file(loader.template)
                 os.rename(template_path, load_path)
             for table in loader.tables:
                 self._xlsx_load_sheet(table.sheet, load_path, df)
-            create_file_options = {
-                "parents": [
-                    {"kind": "drive#fileLink", "id": loader.exports.key}
-                ]
-            }
-            f = self.drive.CreateFile(create_file_options)
-            f.SetContentFile(load_path)
-            f.Upload()
+                self._upload_to_folder(load_path, loader.exports.key)
+
+    def _upload_to_folder(self, filepath: str, key: str):
+        options = {"parents": [{"kind": "drive#fileLink", "id": key}]}
+        f = self.drive.CreateFile(options)
+        f.SetContentFile(filepath)
+        f.Upload()
+
+    def _update_file(self, filepath: str, key: str):
+        options = {"id": key}
+        f = self.drive.CreateFile(options)
+        f.SetContentFile(filepath)
+        f.Upload()
 
     def _run_loaders(self):
         for loader in self.config.loaders:
@@ -300,13 +320,9 @@ class DriveETL:
             self._load_config_from_folder(GFolder(key=key))
         else:
             self._load_config_from_file(GFile(key=key))
-        db_path = "DriveETL.db"
-        try:
-            os.remove(db_path)
-        except OSError:
-            pass
-        self._connect_to_db(db_path)
+        self._connect_to_db()
         self._run_extractors()
         self._run_transformers()
         self._run_loaders()
+        self._update_db_source()
         self._close_db()
