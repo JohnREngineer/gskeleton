@@ -100,7 +100,6 @@ class DriveETL:
             "db": "application/x-sqlite3",
         }
         self.config: ETLConfig
-        self.db: Database
 
     def _select_files(self, fs: GFileSelector) -> List[GFile]:
         def extension_match(file: Dict):
@@ -227,8 +226,8 @@ class DriveETL:
 
     def _connect_to_db(self):
         conn_path = ":memory:"
-        if self.db.key:
-            db_file = GFile(**{"key": self.db.key})
+        if self.config.db.key:
+            db_file = GFile(**{"key": self.config.db.key})
             conn_path = self._download_drive_file(db_file)
             self._conn_path = conn_path
         try:
@@ -237,8 +236,8 @@ class DriveETL:
             print(e)
 
     def _update_db_source(self):
-        if self.db.update and self._conn_path:
-            self._update_file(self._conn_path, self.db.key)
+        if self.config.db.update and self._conn_path:
+            self._update_file(self._conn_path, self.config.db.key)
 
     def _close_db(self):
         if self._db_conn:
