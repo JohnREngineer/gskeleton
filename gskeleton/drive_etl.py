@@ -79,7 +79,7 @@ class Database(BaseModel):
 
 
 class ETLConfig(BaseModel):
-    database: Optional[Database]
+    db: Optional[Database]
     extractors: Optional[List[Extractor]]
     transformers: Optional[List[Transformer]]
     loaders: Optional[List[Loader]]
@@ -226,8 +226,8 @@ class DriveETL:
 
     def _connect_to_db(self):
         conn_path = ":memory:"
-        if self.config.database.key:
-            db_file = GFile(**{"key": self.config.database.key})
+        if self.config.db and self.config.db.key:
+            db_file = GFile(**{"key": self.config.db.key})
             conn_path = self._download_drive_file(db_file)
             self._conn_path = conn_path
         try:
@@ -236,8 +236,8 @@ class DriveETL:
             print(e)
 
     def _update_db_source(self):
-        if self.config.database.update and self._conn_path:
-            self._update_file(self._conn_path, self.config.database.key)
+        if self.config.db and self.config.db.update and self._conn_path:
+            self._update_file(self._conn_path, self.config.db.key)
 
     def _close_db(self):
         if self._db_conn:
