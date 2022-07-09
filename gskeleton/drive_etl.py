@@ -296,7 +296,7 @@ class DriveETL:
                 os.rename(template_path, load_path)
             for table in loader.tables:
                 self._xlsx_load_sheet(table.sheet, load_path, df)
-                self._upload_to_folder(load_path, loader.exports.key)
+            self._upload_to_folder(load_path, loader.exports.key)
 
     def _upload_to_folder(self, filepath: str, key: str):
         options = {"parents": [{"kind": "drive#fileLink", "id": key}]}
