@@ -201,7 +201,7 @@ class DriveETL:
             sheet_name = excel.sheet_names[sheet.index]
         df = excel.parse(
             sheet_name=sheet_name,
-            header=0,
+            header=None,
             index_col=None,
             keep_default_na=False,
         )
