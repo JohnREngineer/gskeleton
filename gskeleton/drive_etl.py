@@ -223,9 +223,9 @@ class DriveETL:
         }
         files = self._select_files(extractor.inputs)
         print(files)
-        if extractor.inputs.extension == "gsheets":
-            for file in files:
-                print(file)
+        for file in files:
+            print(file)
+            if extractor.inputs.extension == "gsheet":
                 wb = self.gspread_client.open_by_key(file.key)
                 for table in extractor.tables:
                     df = self._get_workbook_sheet(wb, table.sheet)
@@ -233,9 +233,7 @@ class DriveETL:
                     df.columns = [self._get_sql_col(c) for c in df.columns]
                     print(df.columns)
                     df_lists[table.name].append(df)
-        elif extractor.inputs.extension == "xlsx":
-            for file in files:
-                print(file)
+            elif extractor.inputs.extension == "xlsx":
                 path = self._download_drive_file(file)
                 xl = pd.ExcelFile(path)
                 for table in extractor.tables:
