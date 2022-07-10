@@ -272,8 +272,12 @@ class DriveETL:
         cursor = self._db_conn.cursor()
         for transformer in self.config.transformers:
             try:
+                sql_command = transformer.sql_command
+                sql_command(
+                    sql_command[:-1] if sql_command[-1] == ";" else sql_command
+                )
                 print(transformer.sql_command)
-                cursor.execute(transformer.sql_command)
+                cursor.execute(sql_command)
                 result = cursor.fetchall()
                 print(result)
             except Error as e:
