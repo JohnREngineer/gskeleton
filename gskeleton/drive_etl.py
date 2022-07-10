@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 import sqlite3
@@ -83,6 +84,10 @@ class ETLConfig(BaseModel):
     extractors: Optional[List[Extractor]]
     transformers: Optional[List[Transformer]]
     loaders: Optional[List[Loader]]
+
+
+def intHash(s):
+    return int(hashlib.sha256(s.encode("utf-8")).hexdigest(), 16) % 10**12
 
 
 class DriveETL:
@@ -232,6 +237,7 @@ class DriveETL:
             self._conn_path = conn_path
         try:
             self._db_conn = sqlite3.connect(conn_path)
+            self._db_conn.create_function("intHash", 1, intHash)
         except Error as e:
             print(e)
 
