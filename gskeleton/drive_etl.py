@@ -167,14 +167,11 @@ class DriveETL:
         config_files = self._select_files(config_selector)
         self._load_config_from_file(config_files[0])
 
-    def _get_worksheet_box(
-        self, worksheet: gspread.Worksheet, box: CellBox
-    ) -> pd.DataFrame:
+    def _get_df_box(self, df: pd.DataFrame, box: CellBox) -> pd.DataFrame:
         def between(x: int):
             start = box.start_col <= x
             return (start and (x <= box.end_col)) if box.end_col else start
 
-        df = pd.DataFrame(worksheet.get_all_values())
         cols = [col for ind, col in enumerate(df.columns) if between(ind)]
         df = df[cols]
         df.columns = df.iloc[box.header_row]
@@ -193,7 +190,17 @@ class DriveETL:
         if not worksheet:
             val_err = f"Worksheet cannot be found at {sheet} in {workbook.id}"
             raise ValueError(val_err)
-        return self._get_worksheet_box(worksheet, sheet.box)
+        df = pd.DataFrame(worksheet.get_all_values())
+        return self._get_df_box(df, sheet.box)
+
+    def _get_xlsx_sheet(
+        self, excel: pd.ExcelFile, sheet: Sheet
+    ) -> pd.DataFrame:
+        sheet_name = sheet.name
+        if not sheet_name:
+            sheet_name = excel.sheet_names[sheet.index]
+        df = excel.parse(sheet_name=sheet_name)
+        return self._get_df_box(df, sheet.box)
 
     def _get_sql_col(self, column_name: str) -> str:
         first_line = column_name.split("\n")[0]
@@ -210,15 +217,26 @@ class DriveETL:
         }
         files = self._select_files(extractor.inputs)
         print(files)
-        for file in files:
-            print(file)
-            wb = self.gspread_client.open_by_key(file.key)
-            for table in extractor.tables:
-                df = self._get_workbook_sheet(wb, table.sheet)
-                print(df.columns)
-                df.columns = [self._get_sql_col(c) for c in df.columns]
-                print(df.columns)
-                df_lists[table.name].append(df)
+        if extractor.inputs.extension == "gsheets":
+            for file in files:
+                print(file)
+                wb = self.gspread_client.open_by_key(file.key)
+                for table in extractor.tables:
+                    df = self._get_workbook_sheet(wb, table.sheet)
+                    print(df.columns)
+                    df.columns = [self._get_sql_col(c) for c in df.columns]
+                    print(df.columns)
+                    df_lists[table.name].append(df)
+        elif extractor.inputs.extension == "xlsx":
+            for file in files:
+                print(file)
+                xl = self._download_drive_file(file)
+                for table in extractor.tables:
+                    df = self._get_xlsx_sheet(xl, table.sheet)
+                    print(df.columns)
+                    df.columns = [self._get_sql_col(c) for c in df.columns]
+                    print(df.columns)
+                    df_lists[table.name].append(df)
         for table in extractor.tables:
             df = pd.concat(df_lists[table.name])
             df.to_sql(
