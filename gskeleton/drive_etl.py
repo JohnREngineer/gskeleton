@@ -206,7 +206,6 @@ class DriveETL:
             keep_default_na=False,
         )
         box = self._get_df_box(df, sheet.box)
-        print(box.head())
         return box
 
     def _get_sql_col(self, column_name: str) -> str:
@@ -244,8 +243,10 @@ class DriveETL:
                     print(df.columns)
                     df.columns = [self._get_sql_col(c) for c in df.columns]
                     print(df.columns)
+                    df.head()
                     df_lists[table.name].append(df)
         for table in extractor.tables:
+            print(df_lists)
             df = pd.concat(df_lists[table.name])
             df.to_sql(
                 table.name, self._db_conn, if_exists="replace", index=False
