@@ -200,7 +200,10 @@ class DriveETL:
         if not sheet_name:
             sheet_name = excel.sheet_names[sheet.index]
         df = excel.parse(sheet_name=sheet_name)
-        return self._get_df_box(df, sheet.box)
+
+        box = self._get_df_box(df, sheet.box)
+        print(box.head())
+        return box
 
     def _get_sql_col(self, column_name: str) -> str:
         first_line = column_name.split("\n")[0]
