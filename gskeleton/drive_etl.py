@@ -199,8 +199,9 @@ class DriveETL:
         sheet_name = sheet.name
         if not sheet_name:
             sheet_name = excel.sheet_names[sheet.index]
-        df = excel.parse(sheet_name=sheet_name)
-
+        df = excel.parse(
+            sheet_name=sheet_name, header=[0], keep_default_na=False
+        )
         box = self._get_df_box(df, sheet.box)
         print(box.head())
         return box
