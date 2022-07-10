@@ -319,18 +319,23 @@ class DriveETL:
             cursor.execute(query)
             result = cursor.fetchall()
             df = pd.DataFrame(result)
-            df.columns = next(zip(*cursor.description))
-            df_dict[table.name] = df
+            if len(df) > 0:
+                df.columns = next(zip(*cursor.description))
+                df_dict[table.name] = df
         if loader.extension == "xlsx":
+            upload = False
             load_path = self._get_loader_filename(loader)
             if loader.template:
                 template_path = self._download_drive_file(loader.template)
                 os.rename(template_path, load_path)
             for table in loader.tables:
-                self._xlsx_load_sheet(
-                    table.sheet, load_path, df_dict[table.name]
-                )
-            self._upload_to_folder(load_path, loader.exports.key)
+                if len(df_dict[table.name]) > 0:
+                    upload = True
+                    self._xlsx_load_sheet(
+                        table.sheet, load_path, df_dict[table.name]
+                    )
+            if upload:
+                self._upload_to_folder(load_path, loader.exports.key)
 
     def _upload_to_folder(self, filepath: str, key: str):
         options = {"parents": [{"kind": "drive#fileLink", "id": key}]}
