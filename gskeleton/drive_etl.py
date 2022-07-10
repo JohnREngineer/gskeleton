@@ -230,7 +230,8 @@ class DriveETL:
         elif extractor.inputs.extension == "xlsx":
             for file in files:
                 print(file)
-                xl = self._download_drive_file(file)
+                path = self._download_drive_file(file)
+                xl = pd.ExcelFile(path)
                 for table in extractor.tables:
                     df = self._get_xlsx_sheet(xl, table.sheet)
                     print(df.columns)
