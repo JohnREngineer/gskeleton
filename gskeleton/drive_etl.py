@@ -122,7 +122,7 @@ class DriveETL:
         sorted_files = sorted(
             filtered, key=(lambda x: x[fs.order_by]), reverse=fs.desc
         )
-        return_files = [GFile(key=f["id"]) for f in sorted_files]
+        return_files = [GFile(key=f["id"]) for f in sorted_files][fs.top :]
         return return_files
 
     def _download_drive_file(self, file: GFile) -> str:
