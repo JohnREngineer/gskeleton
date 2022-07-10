@@ -272,7 +272,7 @@ class DriveETL:
         cursor = self._db_conn.cursor()
         for transformer in self.config.transformers:
             try:
-                print(transformer.command)
+                print(transformer.sql_command)
                 cursor.execute(transformer.sql_command)
                 result = cursor.fetchall()
                 print(result)
