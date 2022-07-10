@@ -273,7 +273,7 @@ class DriveETL:
         for transformer in self.config.transformers:
             try:
                 sql_command = transformer.sql_command
-                sql_command(
+                sql_command = (
                     sql_command[:-1] if sql_command[-1] == ";" else sql_command
                 )
                 print(transformer.sql_command)
