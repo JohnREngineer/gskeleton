@@ -222,28 +222,22 @@ class DriveETL:
             table.name: [] for table in extractor.tables
         }
         files = self._select_files(extractor.inputs)
-        print(files)
         for file in files:
             print(file)
             if extractor.inputs.extension == "gsheet":
                 wb = self.gspread_client.open_by_key(file.key)
                 for table in extractor.tables:
                     df = self._get_workbook_sheet(wb, table.sheet)
-                    print(df.columns)
                     df.columns = [self._get_sql_col(c) for c in df.columns]
-                    print(df.columns)
                     df_lists[table.name].append(df)
             elif extractor.inputs.extension == "xlsx":
                 path = self._download_drive_file(file)
                 xl = pd.ExcelFile(path)
                 for table in extractor.tables:
                     df = self._get_xlsx_sheet(xl, table.sheet)
-                    print(df.columns)
                     df.columns = [self._get_sql_col(c) for c in df.columns]
-                    print(df.columns)
                     df_lists[table.name].append(df)
         for table in extractor.tables:
-            print(df_lists)
             df = pd.concat(df_lists[table.name])
             df.to_sql(
                 table.name, self._db_conn, if_exists="replace", index=False
@@ -278,6 +272,7 @@ class DriveETL:
         cursor = self._db_conn.cursor()
         for transformer in self.config.transformers:
             try:
+                print(transformer.command)
                 cursor.execute(transformer.sql_command)
                 result = cursor.fetchall()
                 print(result)
