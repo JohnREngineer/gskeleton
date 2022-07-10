@@ -241,7 +241,6 @@ class DriveETL:
                     print(df.columns)
                     df.columns = [self._get_sql_col(c) for c in df.columns]
                     print(df.columns)
-                    df.head()
                     df_lists[table.name].append(df)
         for table in extractor.tables:
             print(df_lists)
@@ -329,7 +328,7 @@ class DriveETL:
                 template_path = self._download_drive_file(loader.template)
                 os.rename(template_path, load_path)
             for table in loader.tables:
-                if len(df_dict[table.name]) > 0:
+                if table.name in df_dict:
                     upload = True
                     self._xlsx_load_sheet(
                         table.sheet, load_path, df_dict[table.name]
