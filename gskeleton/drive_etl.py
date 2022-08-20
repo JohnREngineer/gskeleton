@@ -273,14 +273,18 @@ class DriveETL:
     def _run_transformers(self):
         cursor = self._db_conn.cursor()
         for transformer in self.config.transformers:
-            sql_command = transformer.sql_command
-            sql_command = (
-                sql_command[:-1] if sql_command[-1] == ";" else sql_command
-            )
-            print(transformer.sql_command)
-            cursor.execute(sql_command)
-            result = cursor.fetchall()
-            print(result)
+            try:
+                sql_command = transformer.sql_command
+                sql_command = (
+                    sql_command[:-1] if sql_command[-1] == ";" else sql_command
+                )
+                print(transformer.sql_command)
+                cursor.execute(sql_command)
+                result = cursor.fetchall()
+                print(result)
+            except Error as e:
+                self._close_db()
+                raise Exception(e)
 
     def _get_loader_filename(self, loader: Loader) -> str:
         suffix = ""
