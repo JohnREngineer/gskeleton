@@ -303,8 +303,9 @@ class DriveETL:
         if not sheet_name:
             xl = pd.ExcelFile(path)
             sheet_name = xl.sheet_names[sheet.index]
-        ef = pd.read_excel(path, sheet_name)
-        ef = ef.append(df, ignore_index=True)
+        of = pd.read_excel(path, sheet_name)
+        df.columns = of.columns
+        ef = of.append(df, ignore_index=True)
         ef = ef.replace(
             {
                 "TRUE": True,
@@ -315,7 +316,9 @@ class DriveETL:
                 "false": False,
             }
         )
-        ef.columns = [c.split(".")[0] if "." in c else c for c in ef.columns]
+        ef.columns = [
+            re.split(r"\.\d+", c)[0] if "." in c else c for c in ef.columns
+        ]
         writer_options = {
             "engine": "openpyxl",
             "mode": "a",
