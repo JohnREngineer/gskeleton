@@ -305,8 +305,16 @@ class DriveETL:
         ef = pd.read_excel(path, sheet_name)
         ef.columns = df.columns
         bf = pd.DataFrame([[""] * len(ef.columns)], columns=ef.columns)
-        rf = df.replace("(?i)true", True, regex=True)
-        rf = rf.replace("(?i)false", False, regex=True)
+        rf = df.replace(
+            {
+                "TRUE": True,
+                "True": True,
+                "true": True,
+                "FALSE": False,
+                "False": False,
+                "false": False,
+            }
+        )
         ef = ef.append(bf, ignore_index=True)
         ef = ef.append(rf, ignore_index=True)
         writer_options = {
