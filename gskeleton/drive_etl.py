@@ -304,7 +304,6 @@ class DriveETL:
             sheet_name = xl.sheet_names[sheet.index]
         ef = pd.read_excel(path, sheet_name)
         ef.columns = df.columns
-        bf = pd.DataFrame([[""] * len(ef.columns)], columns=ef.columns)
         rf = df.replace(
             {
                 "TRUE": True,
@@ -315,7 +314,6 @@ class DriveETL:
                 "false": False,
             }
         )
-        ef = ef.append(bf, ignore_index=True)
         ef = ef.append(rf, ignore_index=True)
         writer_options = {
             "engine": "openpyxl",
