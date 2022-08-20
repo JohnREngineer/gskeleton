@@ -302,13 +302,20 @@ class DriveETL:
         if not sheet_name:
             xl = pd.ExcelFile(path)
             sheet_name = xl.sheet_names[sheet.index]
+        ef = pd.read_excel(path, sheet_name)
+        ef.columns = df.columns
+        bf = pd.DataFrame([[""] * len(ef.columns)], columns=ef.columns)
+        rf = df.replace("(?i)true", True, regex=True)
+        rf = rf.replace("(?i)false", False, regex=True)
+        ef = ef.append(bf, ignore_index=True)
+        ef = ef.append(rf, ignore_index=True)
         writer_options = {
             "engine": "openpyxl",
             "mode": "a",
             "if_sheet_exists": "replace",
         }
         with pd.ExcelWriter(path, **writer_options) as writer:
-            df.to_excel(writer, sheet_name, index=False)
+            ef.to_excel(writer, sheet_name, index=False)
 
     def _load_tables(self, loader: Loader):
         df_dict: Dict[str, pd.DataFrame] = {}
