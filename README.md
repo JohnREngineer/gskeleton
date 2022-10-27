@@ -1,6 +1,6 @@
 # GSkeleton
 
-This project utilizes Python, SQL, and Google APIs to automate ETL operations in Google Sheets and Google Drive that businesses often spend precious resources doing manually.
+This project utilizes Python, SQL, Google Colab, and Google APIs to automate ETL operations in Google Sheets and Google Drive that businesses often spend precious resources doing manually.
 
 Example ETL configuration YAML file:
 
