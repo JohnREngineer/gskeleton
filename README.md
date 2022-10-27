@@ -1,8 +1,8 @@
-# gskeleton
+# GSkeleton
 
-This project utilizes utilizes Python, SQL, and Google APIs to automate manual ETLs operations done in Google Drive, Sheets, etc that individuals and small business spend precious time on.
+This project utilizes Python, SQL, and Google APIs to automate ETL operations in Google Sheets and Google Drive that businesses often spend precious resources doing manually.
 
-Example config:
+Example ETL configuration YAML file:
 
 ```
 extractors:
@@ -15,27 +15,27 @@ extractors:
     -   name: users
         sheet:
             index: 1
-            name: Bizz Users
+            name: Users
             box:
                 header_row: 0
                 start_row: 1
     -   name: orders
         sheet:
             index: 0
-            name: Bizz Orders
+            name: Orders
             box:
                 header_row: 1
                 start_row: 4
                 start_column: 1
 trasnformers:
--   sql_commant: >
+-   sql_command: >
         CREATE TABLE first_time_users AS
             SELECT user_id, first_name, middle_name, last_name
             FROM users
             WHERE previous_orders = 0;
--   sql_commant: >
+-   sql_command: >
         CREATE TABLE first_time_user_orders AS
-            SELECT first_name, middle_name, last_name
+            SELECT order_id, first_name, middle_name, last_name
             FROM orders o
             JOIN first_time_users ftu ON o.user_id = ftu.user_id;
 loaders:
@@ -43,7 +43,7 @@ loaders:
     suffix_type: unix
     extension: xlsx
     template:
-        key: {Users template key}
+        key: {New users template key}
     exports:
         key: {Exports folder key}
     tables:
@@ -54,7 +54,7 @@ loaders:
     suffix_type: unix
     extension: xlsx
     template:
-        key: {NewUserOrderTemplate.xlsx}
+        key: {New user orders template key}
     exports:
         key: {Exports folder key}
     tables:

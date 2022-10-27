@@ -1,5 +1,0 @@
-json: application/json
-gsheet: application/vnd.google-apps.spreadsheet
-xlsx: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-yaml: application/x-yaml
-csv: text/csv
