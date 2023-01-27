@@ -258,6 +258,7 @@ class DriveETL:
         try:
             self._db_conn = sqlite3.connect(conn_path)
             self._db_conn.create_function("intHash", 1, intHash)
+            self._db_conn.con.create_function('regexp', 2, lambda x, y: 1 if re.search(x, y) else 0)
         except Error as e:
             print(e)
 
