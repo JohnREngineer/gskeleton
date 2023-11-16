@@ -380,5 +380,5 @@ class DriveETL:
         self._run_extractors()
         self._run_transformers()
         self._run_loaders()
-        self._update_db_source()
         self._close_db()
+        self._update_db_source()
