@@ -303,7 +303,7 @@ class DriveETL:
             sheet_name = xl.sheet_names[sheet.index]
         of = pd.read_excel(path, sheet_name)
         df.columns = of.columns
-        ef = of.append(df, ignore_index=True)
+        ef = pd.concat([of, df], ignore_index=True)
         ef = ef.replace(
             {
                 "TRUE": True,
