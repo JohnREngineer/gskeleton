@@ -5,7 +5,7 @@ import sqlite3
 import time
 from datetime import datetime as dt
 from sqlite3 import Error
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, ClassVar
 
 import gspread
 import pandas as pd
@@ -18,20 +18,20 @@ from pydrive2.drive import GoogleDrive
 
 class GFile(BaseModel):
     key: str
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class GFolder(BaseModel):
     key: str
-    name: Optional[str]
+    name: Optional[str] = None
 
 
 class GFileSelector(BaseModel):
     folder: GFolder
-    top: Union[int, None] = None
-    extension: Union[str, None] = None
+    top: Optional[int] = None
+    extension: Optional[str] = None
     order_by: str = "modifiedDate"
-    desc = False
+    desc: bool = False
     # extension in ["title", "createdDate", "modifiedDate"]
     # order_by in ["json", "gsheet", "xlsx", "yaml", "csv"]
 
@@ -40,13 +40,13 @@ class CellBox(BaseModel):
     header_row: int = 0
     start_row: int = 1
     start_col: int = 0
-    end_row: Union[int, None] = None
-    end_col: Union[int, None] = None
+    end_row: Optional[int] = None
+    end_col: Optional[int] = None
 
 
 class Sheet(BaseModel):
     index: int = 0
-    name: Optional[str]
+    name: Optional[str] = None
     box: CellBox = CellBox()
 
 
@@ -67,9 +67,9 @@ class Transformer(BaseModel):
 
 class Loader(BaseModel):
     name: str
-    suffix_type: Optional[str]  # ["unix", "timestamp"]
+    suffix_type: Optional[str] = None  # Allowed values: ["unix", "timestamp"]
     extension: str
-    template: Optional[GFile]
+    template: Optional[GFile] = None
     exports: GFolder
     tables: List[Table]
 
@@ -80,20 +80,20 @@ class Database(BaseModel):
 
 
 class ETLConfig(BaseModel):
-    db: Optional[Database]
-    extractors: Optional[List[Extractor]]
-    transformers: Optional[List[Transformer]]
-    loaders: Optional[List[Loader]]
+    db: Optional[Database] = None
+    extractors: Optional[List[Extractor]] = None
+    transformers: Optional[List[Transformer]] = None
+    loaders: Optional[List[Loader]] = None
 
 
-def intHash(s):
-    return int(hashlib.sha256(s.encode("utf-8")).hexdigest(), 16) % 10**12
+def intHash(s: str) -> int:
+    return int(hashlib.sha256(s.encode("utf-8")).hexdigest(), 16) % 10 ** 12
 
 
 class DriveETL:
     def __init__(self):
         self.start_unix = str(int(time.time()))
-        self.mime_types = {
+        self.mime_types: ClassVar[Dict[str, str]] = {
             "json": "application/json",
             "gsheet": "application/vnd.google-apps.spreadsheet",
             "xlsx": (
@@ -104,7 +104,7 @@ class DriveETL:
             "csv": "text/csv",
             "db": "application/x-sqlite3",
         }
-        self.config: ETLConfig
+        self.config: Optional[ETLConfig] = None
 
     def _select_files(self, fs: GFileSelector) -> List[GFile]:
         def extension_match(file: Dict):
@@ -149,13 +149,10 @@ class DriveETL:
 
     def _load_config_from_file(self, config_file: GFile):
         path = self._download_drive_file(config_file)
-        config = None
         with open(path, "r") as stream:
             data = yaml.safe_load(stream)
-            config = ETLConfig(**data)
-        if config:
-            self.config = config
-        else:
+            self.config = ETLConfig(**data)
+        if not self.config:
             raise ValueError(f"Cannot load config file {config_file}")
 
     def _load_config_from_folder(self, folder: GFolder):
@@ -306,7 +303,7 @@ class DriveETL:
             sheet_name = xl.sheet_names[sheet.index]
         of = pd.read_excel(path, sheet_name)
         df.columns = of.columns
-        ef = of.append(df, ignore_index=True)
+        ef = pd.concat([of, df], ignore_index=True)
         ef = ef.replace(
             {
                 "TRUE": True,
